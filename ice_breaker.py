@@ -6,11 +6,12 @@ from langchain.chains import LLMChain
 from langchain_ollama import ChatOllama
 from third_parties.linkedin import scrape_linkedin_profile
 from agents.linkedin_lookup_agent import lookup as linkedin_lookup_agent
-from output_parsers import summary_parser
+from output_parsers import summary_parser, Summary
+from typing import Tuple
 
-def ice_break_with(name: str) -> str:
+def ice_break_with(name: str) -> Tuple[Summary, str]:
     linkedin_username = linkedin_lookup_agent(name=name)
-    linkedin_data = linkedin_data = scrape_linkedin_profile(linkedin_profile_url=linkedin_username)
+    linkedin_data = linkedin_data = scrape_linkedin_profile(linkedin_profile_url=linkedin_username, mock=False)
 
 
     summary_template = """
@@ -31,9 +32,9 @@ def ice_break_with(name: str) -> str:
 
     chain = summary_prompt_template | llm | summary_parser
 
-    res = chain.invoke(input={"information": linkedin_data})
+    res:Summary = chain.invoke(input={"information": linkedin_data})
 
-    print(res)
+    return res, linkedin_data.get("profile_pic_url")
 
 if __name__ == "__main__":
     load_dotenv()
